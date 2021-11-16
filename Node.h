@@ -13,7 +13,7 @@ public:
     Node* left = NULL;
     Node* right = NULL;
     int value;
-    int height;
+    int height = 0;
     
     Node(int data);
     ~Node();
