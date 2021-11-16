@@ -17,9 +17,10 @@ public:
     ~AVL();
 
     Node* getRootNode() const;
-    void rotateLeft();
-    void rotateRight();
+    void rotateLeft(Node* tempRoot);
+    void rotateRight(Node* tempRoot);
     int getNodeHeight(Node* currentNode);
+    void checkBalance(Node* currentNode);
     void calcHeight(Node* currentNode);
     bool add(int data);
     bool addHelper(Node*& currentNode, int data);

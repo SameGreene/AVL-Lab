@@ -14,6 +14,7 @@ public:
     Node* right = NULL;
     int value;
     int height = 0;
+    int balance = 0; //0=balanced, NEG=left-heavy, POS=right-heavy
     
     Node(int data);
     ~Node();

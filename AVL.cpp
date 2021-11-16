@@ -11,19 +11,21 @@ AVL::~AVL(){}
 Node* AVL::getRootNode() const{
     return root;
 }
-void AVL::rotateLeft(){
+void AVL::rotateLeft(Node* tempRoot){
     Node* temp;
-    temp = root->right;
-    root->right = temp->left;
-    temp->left = root;
+    temp = tempRoot->right;
+    tempRoot->right = temp->left;
+    temp->left = tempRoot;
     root = temp;
+    return;
 }
-void AVL::rotateRight(){
+void AVL::rotateRight(Node* tempRoot){
     Node* temp;
-    temp = root->left;
-    root->left = temp->right;
-    temp->right = root;
-    root = temp;
+    temp = tempRoot->left;
+    tempRoot->left = temp->right;
+    temp->right = tempRoot;
+    tempRoot = temp;
+    return;
 }
 int AVL::getNodeHeight(Node* currentNode){
     if(currentNode == NULL){
@@ -32,6 +34,33 @@ int AVL::getNodeHeight(Node* currentNode){
     else{
         return currentNode->getHeight();
     }
+}
+void AVL::checkBalance(Node* currentNode){
+    Node* tempLeft;
+    tempLeft = currentNode->left;
+    Node* tempRight;
+    tempRight = currentNode->right;
+
+    int leftBal;
+    int rightBal;
+
+    if(tempLeft != NULL){
+        checkBalance(tempLeft);
+    }
+    if(tempRight != NULL){
+        checkBalance(tempRight);
+    }
+    currentNode->balance = tempRight->height - tempLeft->height;
+
+    if(currentNode->balance < 0){
+        //left-heavy
+        rotateRight(currentNode);
+    }
+    else if(currentNode->balance >0){
+        //right-heavy
+        rotateLeft(currentNode);
+    }
+    return;
 }
 void AVL::calcHeight(Node* currentNode){
     int max = 0;
@@ -50,7 +79,9 @@ void AVL::calcHeight(Node* currentNode){
     currentNode->height = max + 1;
 }
 bool AVL::add(int data){
-    return addHelper(root, data);
+    bool retBool = addHelper(root, data);
+    checkBalance(root);
+    return retBool;
 }
 bool AVL::addHelper(Node*& currentNode, int data){
     if(currentNode == NULL){
@@ -78,7 +109,9 @@ bool AVL::addHelper(Node*& currentNode, int data){
     }
 }
 bool AVL::remove(int data){
-    return removeHelper(root, data);
+    bool retBool = removeHelper(root, data);
+    checkBalance(root);
+    return retBool;
 }
 bool AVL::removeHelper(Node*& local_root, int data){
     if(local_root == NULL){
