@@ -3,7 +3,11 @@
 #include<iostream>
 #include<string>
 
-Node::Node(int data){}
+Node::Node(int data){
+    value = data;
+    height = 1;
+    balance = 0;
+}
 Node::~Node(){}
 
 int Node::getData() const{

@@ -16,8 +16,7 @@ void AVL::rotateLeft(Node* tempRoot){
     temp = tempRoot->right;
     tempRoot->right = temp->left;
     temp->left = tempRoot;
-    root = temp;
-    return;
+    tempRoot = temp;
 }
 void AVL::rotateRight(Node* tempRoot){
     Node* temp;
@@ -25,7 +24,6 @@ void AVL::rotateRight(Node* tempRoot){
     tempRoot->left = temp->right;
     temp->right = tempRoot;
     tempRoot = temp;
-    return;
 }
 int AVL::getNodeHeight(Node* currentNode){
     if(currentNode == NULL){
@@ -50,17 +48,30 @@ void AVL::checkBalance(Node* currentNode){
     if(tempRight != NULL){
         checkBalance(tempRight);
     }
-    currentNode->balance = tempRight->height - tempLeft->height;
 
-    if(currentNode->balance < 0){
+    if(tempLeft == NULL && tempRight == NULL){
+        return;
+    }
+    if(tempLeft == NULL && tempRight != NULL){
+        currentNode->balance = tempRight->height;
+    }
+    if(tempRight == NULL && tempLeft != NULL){
+        currentNode->balance = 0 - (tempLeft->height);
+    }
+    if(tempLeft != NULL && tempRight != NULL){
+        currentNode->balance = tempRight->height - tempLeft->height;
+    }
+
+    if(currentNode->balance < -1){
         //left-heavy
         rotateRight(currentNode);
+        calcHeight(root);
     }
-    else if(currentNode->balance >0){
+    else if(currentNode->balance > 1){
         //right-heavy
         rotateLeft(currentNode);
+        calcHeight(root);
     }
-    return;
 }
 void AVL::calcHeight(Node* currentNode){
     int max = 0;
