@@ -17,15 +17,17 @@ public:
     ~AVL();
 
     Node* getRootNode() const;
-    void rotateLeft(Node* tempRoot);
-    void rotateRight(Node* tempRoot);
+    void rotateLeft(Node*& tempRoot);
+    void rotateRight(Node*& tempRoot);
+    void balanceLeft(Node*& currentNode);
+    void balanceRight(Node*& currentNode);
     int getNodeHeight(Node* currentNode);
-    void checkBalance(Node* currentNode);
     void calcHeight(Node* currentNode);
     bool add(int data);
     bool addHelper(Node*& currentNode, int data);
     bool remove(int data);
     bool removeHelper(Node*& local_root, int data);
+    void balanceRemove(Node*& currentNode);
     void replace(Node*& old_root, Node*& local_root);
     void clear();
     void clearHelper(Node* currentNode);

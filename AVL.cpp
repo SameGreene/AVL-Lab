@@ -11,19 +11,39 @@ AVL::~AVL(){}
 Node* AVL::getRootNode() const{
     return root;
 }
-void AVL::rotateLeft(Node* tempRoot){
+void AVL::rotateLeft(Node*& tempRoot){
     Node* temp;
     temp = tempRoot->right;
     tempRoot->right = temp->left;
     temp->left = tempRoot;
     tempRoot = temp;
 }
-void AVL::rotateRight(Node* tempRoot){
+void AVL::rotateRight(Node*& tempRoot){
     Node* temp;
     temp = tempRoot->left;
     tempRoot->left = temp->right;
     temp->right = tempRoot;
     tempRoot = temp;
+}
+void AVL::balanceLeft(Node*& currentNode){
+    if(currentNode == NULL){
+        return;
+    }
+
+    if(currentNode->right->balance() <= -1){
+        rotateRight(currentNode->right);
+    }
+    rotateLeft(currentNode);
+}
+void AVL::balanceRight(Node*& currentNode){
+    if(currentNode == NULL){
+        return;
+    }
+
+    if(currentNode->left->balance() >= 1){
+        rotateLeft(currentNode->left);
+    }
+    rotateRight(currentNode);
 }
 int AVL::getNodeHeight(Node* currentNode){
     if(currentNode == NULL){
@@ -33,65 +53,8 @@ int AVL::getNodeHeight(Node* currentNode){
         return currentNode->getHeight();
     }
 }
-void AVL::checkBalance(Node* currentNode){
-    Node* tempLeft;
-    tempLeft = currentNode->left;
-    Node* tempRight;
-    tempRight = currentNode->right;
-
-    int leftBal;
-    int rightBal;
-
-    if(tempLeft != NULL){
-        checkBalance(tempLeft);
-    }
-    if(tempRight != NULL){
-        checkBalance(tempRight);
-    }
-
-    if(tempLeft == NULL && tempRight == NULL){
-        return;
-    }
-    if(tempLeft == NULL && tempRight != NULL){
-        currentNode->balance = tempRight->height;
-    }
-    if(tempRight == NULL && tempLeft != NULL){
-        currentNode->balance = 0 - (tempLeft->height);
-    }
-    if(tempLeft != NULL && tempRight != NULL){
-        currentNode->balance = tempRight->height - tempLeft->height;
-    }
-
-    if(currentNode->balance < -1){
-        //left-heavy
-        rotateRight(currentNode);
-        calcHeight(root);
-    }
-    else if(currentNode->balance > 1){
-        //right-heavy
-        rotateLeft(currentNode);
-        calcHeight(root);
-    }
-}
-void AVL::calcHeight(Node* currentNode){
-    int max = 0;
-    
-    if(currentNode == NULL){
-        return;
-    }
-
-    if(getNodeHeight(currentNode->getLeftChild()) > max){
-        max = getNodeHeight(currentNode->getLeftChild());
-    }
-    if(getNodeHeight(currentNode->getRightChild()) > max){
-        max = getNodeHeight(currentNode->getRightChild());
-    }
-
-    currentNode->height = max + 1;
-}
 bool AVL::add(int data){
     bool retBool = addHelper(root, data);
-    checkBalance(root);
     return retBool;
 }
 bool AVL::addHelper(Node*& currentNode, int data){
@@ -99,60 +62,111 @@ bool AVL::addHelper(Node*& currentNode, int data){
         currentNode = new Node(data);
         currentNode->left = NULL;
         currentNode->right = NULL;
-        currentNode->value = data;
+        currentNode->height = 0;
         return 1;
     }
     else if(data == currentNode->getData()){
         return 0;
     }
-    else if(data < currentNode->getData()){
-        bool retBool = addHelper(currentNode->left, data);
-        calcHeight(currentNode);
-        return retBool;
-    }
     else if(data > currentNode->getData()){
         bool retBool = addHelper(currentNode->right, data);
-        calcHeight(currentNode);
+        if(retBool == 1){
+            if(currentNode->balance() > 1){
+                balanceLeft(currentNode);
+            }
+            else if(currentNode->balance() < -1){
+                balanceRight(currentNode);
+            }
+        }
         return retBool;
     }
-    else{
-        return 0;
+    else if(data < currentNode->getData()){
+        bool retBool = addHelper(currentNode->left, data);
+        if(retBool == 1){
+            if(currentNode->balance() > 1){
+                balanceLeft(currentNode);
+            }
+            else if(currentNode->balance() < -1){
+                balanceRight(currentNode);
+            }
+        }
+        return retBool;
     }
+    
+    if(currentNode->balance() > 1){
+        balanceLeft(currentNode);
+    }
+    else if(currentNode->balance() < -1){
+        balanceRight(currentNode);
+    }
+
+    return 0;
 }
 bool AVL::remove(int data){
     bool retBool = removeHelper(root, data);
-    checkBalance(root);
+    balanceRemove(root);
     return retBool;
 }
 bool AVL::removeHelper(Node*& local_root, int data){
     if(local_root == NULL){
         return 0;
     }
-    else{
-        if(data < local_root->value){
-            return removeHelper(local_root->left, data);
-        }
-        else if(data > local_root->value){
-            return removeHelper(local_root->right, data);
-        }
-        else{
-            Node* old_root = local_root;
+    
+    Node* tempNode = local_root;
+    Node* tempLeft = local_root->left;
 
-            if(local_root->left == NULL){
-                local_root = local_root->right;
-                delete old_root;
-            }
-            else if(local_root->right == NULL){
-                local_root = local_root->left;
-                delete old_root;
-            }
-            else{
-                replace(old_root, local_root->left);
-            }
-
-            return 1;
-        }
+    if(data < local_root->value){
+        return removeHelper(local_root->left, data);
     }
+    if(data > local_root->value){
+        return removeHelper(local_root->right, data);
+    }
+
+    if(local_root->left == NULL && local_root->right == NULL){
+        delete local_root;
+        local_root = NULL;
+        return 1;
+    }
+    if(local_root->left == NULL || local_root->right == NULL){
+        tempLeft = local_root->left;
+
+        if(tempLeft == NULL){
+            tempLeft = local_root->right;
+        }
+
+        delete local_root;
+        local_root = tempLeft;
+        return 1;
+    }
+    while(tempLeft->right != NULL){
+        tempNode = tempLeft;
+        tempLeft = tempLeft->right;
+    }
+    if(local_root->value != tempNode->value){
+        tempNode->right = tempLeft->left;
+    }
+    else{
+        tempNode->left = tempLeft->left;
+    }
+
+    local_root->value = tempLeft->value;
+    delete tempLeft;
+    return 1;
+}
+void AVL::balanceRemove(Node*& currentNode){
+    if(currentNode == NULL){
+        return;
+    }
+
+    if(currentNode->balance() > 1){
+        balanceLeft(currentNode);
+    }
+    if(currentNode->balance() < -1){
+        balanceRight(currentNode);
+    }
+
+    balanceRemove(currentNode->left);
+    balanceRemove(currentNode->right);
 }
 void AVL::replace(Node*& old_root, Node*& local_root){
     if(local_root->right != NULL){
